@@ -1,0 +1,6 @@
+{
+  "name": "MerlionFX",
+  "description": "Premium Singapore currency exchange and multi-currency travel finance app with real-time rates, trend analysis, and travel concierge.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
