@@ -39,66 +39,66 @@
 //   }
 // }
 
-// export default function handler(req: any, res: any) {
-//   try {
-//     // Read the key directly to avoid import errors
-//     const masKey =
-//       process.env.MAS_KEY_ID ||
-//       process.env.MAS_API_KEY ||
-//       process.env.KEY_ID ||
-//       '';
-
-//     const isConfigured = Boolean(masKey && masKey.trim().length > 0);
-
-//     return res.status(200).json({
-//       status: 'ok',
-//       masConfigured: isConfigured,
-//     });
-//   } catch (error: any) {
-//     return res.status(500).json({
-//       status: 'error',
-//       message: error?.message || 'Server error in health check',
-//     });
-//   }
-// }
-
-export default async function handler(req: any, res: any) {
+export default function handler(req: any, res: any) {
   try {
+    // Read the key directly to avoid import errors
     const masKey =
       process.env.MAS_KEY_ID ||
       process.env.MAS_API_KEY ||
       process.env.KEY_ID ||
       '';
 
-    // MAS Exchange Rates API URL (Domestic Interest Rates & Exchange Rates)
-    const masUrl = 'https://api.mas.gov.sg/records/exchange_rates';
+    const isConfigured = Boolean(masKey && masKey.trim().length > 0);
 
-    // Set up request headers if an API key is required
-    const headers: Record<string, string> = {};
-    if (masKey && masKey.trim().length > 0) {
-      headers['x-api-key'] = masKey.trim();
-    }
-
-    // Fetch live rates from MAS
-    const response = await fetch(masUrl, { headers });
-
-    if (!response.ok) {
-      throw new Error(`MAS API responded with HTTP status ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // Return the live dataset to your frontend application
     return res.status(200).json({
       status: 'ok',
-      masConfigured: Boolean(masKey),
-      data: data.result || data
+      masConfigured: isConfigured,
     });
   } catch (error: any) {
-    console.error("Fetch rates error:", error);
     return res.status(500).json({
       status: 'error',
-      message: error?.message || 'Failed to fetch live FX rates from MAS',
+      message: error?.message || 'Server error in health check',
     });
   }
 }
+
+// export default async function handler(req: any, res: any) {
+//   try {
+//     const masKey =
+//       process.env.MAS_KEY_ID ||
+//       process.env.MAS_API_KEY ||
+//       process.env.KEY_ID ||
+//       '';
+
+//     // MAS Exchange Rates API URL (Domestic Interest Rates & Exchange Rates)
+//     const masUrl = 'https://api.mas.gov.sg/records/exchange_rates';
+
+//     // Set up request headers if an API key is required
+//     const headers: Record<string, string> = {};
+//     if (masKey && masKey.trim().length > 0) {
+//       headers['x-api-key'] = masKey.trim();
+//     }
+
+//     // Fetch live rates from MAS
+//     const response = await fetch(masUrl, { headers });
+
+//     if (!response.ok) {
+//       throw new Error(`MAS API responded with HTTP status ${response.status}`);
+//     }
+
+//     const data = await response.json();
+
+//     // Return the live dataset to your frontend application
+//     return res.status(200).json({
+//       status: 'ok',
+//       masConfigured: Boolean(masKey),
+//       data: data.result || data
+//     });
+//   } catch (error: any) {
+//     console.error("Fetch rates error:", error);
+//     return res.status(500).json({
+//       status: 'error',
+//       message: error?.message || 'Failed to fetch live FX rates from MAS',
+//     });
+//   }
+// }
