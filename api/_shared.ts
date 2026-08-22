@@ -1,13 +1,84 @@
+/**
+ * Universal Response & Helper Utilities for Vercel Serverless Functions and Express Server
+ */
+
 export function getMasKeyId(): string {
-  return (
-    process.env.MAS_API_KEY ||
-    process.env.MAS_KEY_ID ||
-    process.env.KEY_ID ||
-    ""
-  );
+  try {
+    return (
+      (typeof process !== 'undefined' && process.env && (
+        process.env.MAS_API_KEY ||
+        process.env.MAS_KEY_ID ||
+        process.env.KEY_ID
+      )) || ""
+    );
+  } catch {
+    return "";
+  }
 }
 
-// Move FALLBACK_CURRENCIES (and any shared transform helpers) here from server.ts:
+/**
+ * Universal sender that handles Express res, Vercel Serverless res, and Edge Web Response
+ */
+export function sendJsonResponse(req: any, res: any, statusCode: number, data: any) {
+  try {
+    // 1. If Express or Vercel Node Serverless response object exists
+    if (res && typeof res.setHeader === 'function') {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, KeyId, X-Requested-With');
+
+      // Handle OPTIONS preflight
+      if (req?.method === 'OPTIONS') {
+        if (typeof res.status === 'function') {
+          return res.status(200).end();
+        }
+        res.statusCode = 200;
+        return res.end();
+      }
+
+      if (typeof res.status === 'function') {
+        if (typeof res.json === 'function') {
+          return res.status(statusCode).json(data);
+        }
+        res.status(statusCode);
+        return res.end(JSON.stringify(data));
+      }
+
+      if (typeof res.json === 'function') {
+        res.statusCode = statusCode;
+        return res.json(data);
+      }
+
+      res.statusCode = statusCode;
+      return res.end(JSON.stringify(data));
+    }
+
+    // 2. If Standard Web / Edge API (req: Request, no res passed)
+    if (typeof Response !== 'undefined') {
+      return new Response(JSON.stringify(data), {
+        status: statusCode,
+        headers: {
+          'Content-Type': 'application/json; charset=utf-8',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, KeyId, X-Requested-With',
+        },
+      });
+    }
+  } catch (err) {
+    console.error('Error in sendJsonResponse:', err);
+    try {
+      if (res && typeof res.end === 'function') {
+        res.statusCode = 200;
+        return res.end(JSON.stringify(data));
+      }
+    } catch {
+      // ignore
+    }
+  }
+}
+
 // Fallback high-precision rate map for currencies if external network is offline
 export const FALLBACK_CURRENCIES = [
   {
